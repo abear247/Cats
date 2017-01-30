@@ -19,7 +19,7 @@
 
 
 -(void)setPhoto:(PhotoObject *)photo{
-    self.photo = photo;
+    _photo = photo;
     self.title.text = photo.dict[@"title"];
     NSData *data = [NSData dataWithContentsOfURL:photo.url];
     self.catImageView.image = [UIImage imageWithData:data];

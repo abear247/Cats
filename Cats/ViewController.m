@@ -11,6 +11,7 @@
 #import "CollectionViewCell.h"
 
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet UICollectionView *tableView;
 @property NSArray *photos;
 @end
 
@@ -20,7 +21,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    NSURL *parseURL = [NSURL URLWithString:@"https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json=1&nojsoncallback=1&api_key={api-key}&tags=cat"];
+    NSURL *parseURL = [NSURL URLWithString:@"https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&nojsoncallback=1&api_key=4d68041ce8ab964d485a8a6cb1f28da8&tags=cat"];
     NSURLRequest *urlRequest = [[NSURLRequest alloc] initWithURL:parseURL];
     
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -33,19 +34,23 @@
         }
         
         NSError *jsonError = nil;
-        NSArray *rawPhotos = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+        NSDictionary *rawPhotos = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
         
         if(jsonError){
             NSLog(@"jsonError: %@", jsonError.localizedDescription);
             return;
         }
-        
+        NSDictionary *photoDict = [rawPhotos objectForKey:@"photos"];
+        NSArray *photoArr = [photoDict objectForKey:@"photo"];
         NSMutableArray *temp = [NSMutableArray new];
-        for (NSDictionary *dict in rawPhotos){
+        for (NSDictionary *dict in photoArr){
             PhotoObject *photo = [[PhotoObject alloc] initWithDict:dict];
             [temp addObject:photo];
         }
         self.photos = [temp copy];
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            [self.tableView reloadData];
+        }];
     }];
     [dataTask resume];
     
@@ -55,9 +60,7 @@
     CollectionViewCell *cell = (CollectionViewCell *)[collectionView dequeueReusableCellWithReuseIdentifier:@"Cell" forIndexPath:indexPath];
     
     PhotoObject *photo = self.photos[indexPath.item];
-    cell.title.text = photo.dict[@"title"];
-    cell.catImageView.image = photo.image;
-    
+    [cell setPhoto:photo];
     return cell;
 }
 
